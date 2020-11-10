@@ -84,6 +84,6 @@ resource "aws_instance" "kafka" {
   }
 
   provisioner "remote-exec" {
-    inline = ["mv -f /tmp/server.properties /etc/kafka/config/server.properties"]
+    inline = ["sudo mv -f /tmp/server.properties /etc/kafka/config/server.properties"]
   }
 }
