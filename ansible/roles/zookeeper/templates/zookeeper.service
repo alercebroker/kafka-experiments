@@ -1,0 +1,8 @@
+[Unit]
+Description=High-available, distributed message broker
+After=network.target
+[Service]
+User=kafka
+ExecStart=/etc/kafka/bin/zookeeper-server-start.sh /etc/kafka/config/zookeeper.properties
+[Install]
+WantedBy=multi-user.target

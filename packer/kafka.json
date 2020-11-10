@@ -1,0 +1,55 @@
+{
+    "variables": {
+        "aws_access_key": "{{ env `AWS_ACCESS_KEY_ID` }}",
+        "aws_secret_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
+        "aws_region": "us-east-1",
+        "instance_type": "{{ env `INSTANCE_TYPE` }}",
+        "name": "kafka-experiment"
+    },
+    "builders": [
+        {
+            "type": "amazon-ebs",
+            "access_key": "{{ user `aws_access_key` }}",
+            "secret_key": "{{ user `aws_secret_key` }}",
+            "region": "{{ user `user aws_region` }}",
+            "source_ami_filter": {
+                "filters": {
+                    "virtualization-type": "hvm",
+                    "name": "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20190212",
+                    "root-device-type": "ebs"
+                },
+                "owners": ["099720109477"],
+                "most_recent": true
+            },
+            "instance_type": "{{ user `instance_type` }}",
+            "ssh_username": "ubuntu",
+            "ami_name": "{{ user `name` }}-{{timestamp}}",
+            "ami_description": "Ubuntu 16.04 kafka-experiment Host Image",
+            "launch_block_device_mappings": [
+                {
+                    "device_name": "/dev/sda1",
+                    "volume_size": 100,
+                    "volume_type": "gp2",
+                    "delete_on_termination": true
+                }
+            ],
+            "tags": {
+                "Name": "{{ user `name` }}-packer-builder"
+            },
+            "run_tags": {
+                "Name": "{{ user `name` }}-packer-builder"
+            }
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "script": "scripts/ansible.sh"
+        },
+        {
+            "type": "ansible-local",
+            "playbook_file": "../ansible/playbooks/kafka.yml",
+            "role_paths": "../ansible/roles/kafka"
+        }
+    ]
+}

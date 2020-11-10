@@ -1,0 +1,85 @@
+---
+- name: Install Java SDK 8
+  apt:
+    update_cache: yes
+    name: openjdk-8-jdk-headless
+    state: present
+
+- name: Download Kafka
+  get_url:
+    url: "https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz"
+    dest: "/opt/kafka.tgz"
+
+- name: Create kafka group
+  group:
+    name: kafka
+    state: present
+
+- name: Create kafka user
+  user:
+    name: kafka
+    groups: kafka
+    state: present
+
+- name: Unarchive tgz file
+  unarchive:
+    src: /opt/kafka.tgz
+    dest: /opt
+    remote_src: yes
+
+- name: Clean installation folder
+  file:
+    state: absent
+    path: "/etc/kafka"
+
+- name: Move files to system folder
+  command: mv /opt/kafka_2.13-2.6.0/ /etc/kafka
+  args:
+    removes: "/opt/kafka_2.13-2.6.0/"
+    creates: "/etc/kafka"
+
+- name: Create directories, set owner, permissions
+  file:
+    path: "{{ item }}"
+    state: "directory"
+    owner: kafka
+    group: kafka
+    mode: 0755
+    recurse: yes
+  with_items:
+    - "etc/kafka"
+    - "etc/kafka/data"
+    - "/var/log/kafka"
+
+# - name: Copy config file
+#   template:
+#     src: "server.properties"
+#     dest: "/etc/kafka/config/server.properties"
+#     owner: kafka
+#     group: kafka
+#     mode: 0755
+
+
+- name: Copy systemd service script
+  template:
+    src: "kafka.service"
+    dest: "/etc/systemd/system/kafka.service"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Ensure service auto-starts
+  service:
+    name: kafka
+    enabled: yes
+
+- name: Restart service
+  service:
+    name: "kafka"
+    state: restarted
+
+- name: Ensure service is running
+  service:
+    name: kafka
+    state: started
+    enabled: yes
