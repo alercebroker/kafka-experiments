@@ -1,0 +1,4 @@
+[submodule "vera_rubin_simulator"]
+	path = vera_rubin_simulator
+	url = https://github.com/alercebroker/vera_rubin_simulator.git
+	branch = main
