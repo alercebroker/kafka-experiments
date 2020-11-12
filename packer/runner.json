@@ -4,7 +4,7 @@
         "aws_secret_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
         "aws_region": "us-east-1",
         "instance_type": "{{ env `INSTANCE_TYPE` }}",
-        "name": "kafka-experiment-kafka"
+        "name": "kafka-experiment-runner"
     },
     "builders": [
         {
@@ -28,7 +28,7 @@
             "launch_block_device_mappings": [
                 {
                     "device_name": "/dev/sda1",
-                    "volume_size": 100,
+                    "volume_size": 10,
                     "volume_type": "gp2",
                     "delete_on_termination": true
                 }
@@ -48,8 +48,8 @@
         },
         {
             "type": "ansible-local",
-            "playbook_file": "../ansible/playbooks/kafka.yml",
-            "role_paths": "../ansible/roles/kafka"
+            "playbook_file": "../ansible/playbooks/runner.yml",
+            "role_paths": ["../ansible/roles/docker", "../ansible/roles/run_experiments"]
         }
     ]
 }

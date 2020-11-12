@@ -8,7 +8,7 @@ provider "aws" {
 }
 
 resource "aws_vpc" "kafka" {
-  cidr_block = "108.0.0.0/16"
+  cidr_block           = "108.0.0.0/16"
   enable_dns_hostnames = true
   tags = {
     Name = "kafka-vpc"
@@ -16,8 +16,8 @@ resource "aws_vpc" "kafka" {
 }
 
 resource "aws_subnet" "kafka" {
-  vpc_id     = aws_vpc.kafka.id
-  cidr_block = "108.0.0.0/24"
+  vpc_id                  = aws_vpc.kafka.id
+  cidr_block              = "108.0.0.0/24"
   map_public_ip_on_launch = true
   tags = {
     Name = "kafka-subnet"
@@ -95,7 +95,7 @@ resource "aws_instance" "zookeeper" {
   key_name                    = "alerce"
 
   tags = {
-    Name = "experiment-zookeeper"
+    Name = "kafka-experiment-zookeeper"
   }
 
   connection {
@@ -116,7 +116,7 @@ resource "aws_instance" "kafka" {
   key_name                    = "alerce"
 
   tags = {
-    Name = "experiment-kafka"
+    Name = "kafka-experiment-kafka"
   }
 
   connection {
@@ -139,5 +139,25 @@ resource "aws_instance" "kafka" {
 
   provisioner "remote-exec" {
     inline = ["sudo mv -f /tmp/server.properties /etc/kafka/config/server.properties", "sudo systemctl restart kafka"]
+  }
+}
+
+resource "aws_instance" "runner" {
+  ami                         = "ami-0266160dfb05615f3"
+  instance_type               = "t2.medium"
+  vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
+  subnet_id                   = aws_subnet.kafka.id
+  associate_public_ip_address = true
+  key_name                    = "alerce"
+
+  tags = {
+    Name = "kafka-experiment-runner"
+  }
+
+  connection {
+    type        = "ssh"
+    host        = self.public_ip
+    user        = "ubuntu"
+    private_key = file(var.private_key_path)
   }
 }

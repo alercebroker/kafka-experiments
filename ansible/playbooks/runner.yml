@@ -1,0 +1,6 @@
+- name: Run experiment
+  hosts: all
+  become: yes
+  roles:
+    - docker
+    - run_experiments

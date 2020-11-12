@@ -1,0 +1,5 @@
+---
+- name: Clone experiment repository
+  git:
+    repo: https://github.com/alercebroker/kafka-experiments
+    dest: /home/ubuntu/experiment
