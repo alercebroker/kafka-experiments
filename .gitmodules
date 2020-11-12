@@ -1,0 +1,7 @@
+[submodule "vera_rubin_simulator"]
+	path = vera_rubin_simulator
+	url = https://github.com/alercebroker/vera_rubin_simulator.git
+[submodule "dummy_step"]
+	path = dummy_step
+	url = https://github.com/alercebroker/dummy_step.git
+	branch = feature/experiment
