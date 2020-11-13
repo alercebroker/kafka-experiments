@@ -1,0 +1,8 @@
+version: "3"
+services:
+  simulator_producer:
+    build: producer
+    environment:
+      - DIRECTORY_PATH=/app/data/
+      - PRODUCER_TOPIC=vera-rubin-simulator
+      - PRODUCER_SERVER=${kafka_private_ip}:${kafka_port}

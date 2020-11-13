@@ -107,7 +107,7 @@ resource "aws_instance" "zookeeper" {
 }
 
 resource "aws_instance" "kafka" {
-  count                       = 1
+  # count                       = 1
   ami                         = "ami-0876854ad385cfee0"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
@@ -130,7 +130,7 @@ resource "aws_instance" "kafka" {
     content = templatefile("templates/server.properties", {
       zookeeper_host  = aws_instance.zookeeper.private_ip,
       zookeeper_port  = 2181,
-      broker_id       = count.index + 1,
+      broker_id       = 1,
       kafka_public_ip = self.public_ip,
       kafka_port      = 9092
     })
@@ -138,12 +138,15 @@ resource "aws_instance" "kafka" {
   }
 
   provisioner "remote-exec" {
-    inline = ["sudo mv -f /tmp/server.properties /etc/kafka/config/server.properties", "sudo systemctl restart kafka"]
+    inline = [
+      "sudo mv -f /tmp/server.properties /etc/kafka/config/server.properties",
+      "sudo systemctl restart kafka"
+    ]
   }
 }
 
 resource "aws_instance" "runner" {
-  ami                         = "ami-0266160dfb05615f3"
+  ami                         = "ami-02315c8e28c3f782d"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -159,5 +162,32 @@ resource "aws_instance" "runner" {
     host        = self.public_ip
     user        = "ubuntu"
     private_key = file(var.private_key_path)
+  }
+
+  provisioner "file" {
+    content = templatefile("templates/dummy_step_docker_compose.yml", {
+      kafka_private_ip = aws_instance.kafka.private_ip,
+      kafka_port       = 9092
+    })
+    destination = "/tmp/dummy_step_docker_compose.yml"
+  }
+
+  provisioner "file" {
+    content = templatefile("templates/simulator_docker_compose.yml", {
+      kafka_private_ip = aws_instance.kafka.private_ip,
+      kafka_port       = 9092
+    })
+    destination = "/tmp/simulator_docker_compose.yml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv -f /tmp/simulator_docker_compose.yml /home/ubuntu/experiment/vera_rubin_simulator/docker-compose.yml",
+      "sudo mv -f /tmp/dummy_step_docker_compose.yml /home/ubuntu/experiment/dummy_step/docker-compose.yml",
+      "cd /home/ubuntu/experiment/vera_rubin_simulator",
+      "sudo docker-compose up -d simulator_producer",
+      "cd /home/ubuntu/experiment/dummy_step",
+      "sudo docker-compose up -d dummy1"
+    ]
   }
 }
