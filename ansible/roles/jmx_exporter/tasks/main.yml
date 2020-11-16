@@ -1,0 +1,19 @@
+---
+- name: Download JMX Exporter
+  get_url:
+    url: https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.13.0/jmx_prometheus_javaagent-0.13.0.jar
+    dest: /tmp/jmx_exporter.jar
+
+- name: Copy JMX to Kafka dir
+  command: mv /tmp/jmx_exporter.jar /etc/kafka/libs
+  args:
+    removes: "/tmp/jmx_exporter.jar"
+    creates: "/etc/kafka/libs/jmx_exporter.jar"
+
+- name: Copy JMX Config
+  template:
+    src: "sample_jmx_exporter.yml"
+    dest: "/etc/kafka/config/sample_jmx_exporter.yml"
+    owner: root
+    group: root
+    mode: 0644

@@ -1,0 +1,103 @@
+---
+- name: create prometheus system group
+  group:
+    name: prometheus
+    system: true
+    state: present
+
+- name: create prometheus system user
+  user:
+    name: prometheus
+    system: true
+    shell: "/usr/sbin/nologin"
+    group: prometheus
+    createhome: false
+    home: "/var/lib/prometheus"
+
+- name: create prometheus data directory
+  file:
+    path: "/var/lib/prometheus"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 0755
+
+- name: create prometheus configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: 0775
+  with_items:
+    - "/etc/prometheus"
+    - "/etc/prometheus/rules"
+    - "/etc/prometheus/file_sd"
+
+- name: download prometheus binary to local folder
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v2.22.2/prometheus-2.22.2.linux-amd64.tar.gz"
+    dest: "/tmp/prometheus-2.22.2.linux-amd64.tar.gz"
+
+- name: unpack prometheus binaries
+  unarchive:
+    src: "/tmp/prometheus-2.22.2.linux-amd64.tar.gz"
+    dest: "/tmp"
+    creates: "/tmp/prometheus-2.22.2.linux-amd64/prometheus"
+    remote_src: yes
+
+- name: propagate official prometheus and promtool binaries
+  copy:
+    src: "/tmp/prometheus-2.22.2.linux-amd64/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0755
+    owner: root
+    group: root
+    remote_src: yes
+  with_items:
+    - prometheus
+    - promtool
+
+- name: propagate official console templates
+  copy:
+    src: "/tmp/prometheus-2.22.2.linux-amd64/{{ item }}/"
+    dest: "/etc/prometheus/{{ item }}/"
+    mode: 0644
+    owner: root
+    group: root
+  with_items:
+    - console_libraries
+    - consoles
+
+
+- name: copy prometheus config template
+  template:
+    src: "prometheus.yml"
+    dest: "/etc/prometheus/prometheus.yml"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: copy prometheus service unit file
+  template:
+    src: "prometheus.service"
+    dest: "/etc/systemd/system/prometheus.service"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Ensure service auto-starts
+  service:
+    name: prometheus
+    enabled: yes
+
+- name: Restart service
+  service:
+    name: "prometheus"
+    state: restarted
+
+- name: Ensure service is running
+  service:
+    name: prometheus
+    state: started
+    enabled: yes
