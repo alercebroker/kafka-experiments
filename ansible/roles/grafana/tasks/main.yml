@@ -1,0 +1,36 @@
+---
+- name: Update apt cache and install dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:    
+    - apt-transport-https
+    - adduser
+    - ca-certificates
+    - libfontconfig
+    - gnupg2
+
+
+- name: Import Grafana GPG signing key
+  apt_key:
+    url: "https://packages.grafana.com/gpg.key"
+    state: present
+
+
+- name: Verify that we have the key with the fingerprint
+  apt_key:
+    id: 
+    state: present
+
+- name: Add Grafana repository
+  apt_repository:
+    repo: deb https://packages.grafana.com/oss/deb stable main
+    state: present
+    update_cache: true
+
+- name: Install grafana
+  apt:
+    name: "grafana{% if ansible_architecture == 'armv6l' %}-rpi{% endif %}{{ (grafana_version != 'latest') | ternary('=' ~ grafana_version, '') }}"
+    state: present
+    update_cache: yes
