@@ -125,7 +125,7 @@ resource "aws_instance" "zookeeper" {
 }
 
 resource "aws_instance" "kafka" {
-  # count                       = 1
+  count                       = 1
   ami                         = "ami-05a43fd0c873b0ccf"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
@@ -148,7 +148,7 @@ resource "aws_instance" "kafka" {
     content = templatefile("templates/server.properties", {
       zookeeper_host  = aws_instance.zookeeper.private_ip,
       zookeeper_port  = 2181,
-      broker_id       = 1,
+      broker_id       = count,
       kafka_public_ip = self.public_ip,
       kafka_port      = 9092
     })

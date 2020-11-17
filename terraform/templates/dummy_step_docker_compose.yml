@@ -5,22 +5,22 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - CONSUMER_SERVER=${kafka_private_ip}:${kafka_port}
+      - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy1
       - CONSUMER_TOPICS=vera-rubin-simulator
       - PRODUCER_TOPIC=dummy1
-      - PRODUCER_SERVER=${kafka_private_ip}:${kafka_port}
+      - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy1
   dummy2:
     build:
       context: .
       dockerfile: Dockerfile
     environment:
-      - CONSUMER_SERVER=${kafka_private_ip}:${kafka_port}
+      - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy2
       - CONSUMER_TOPICS=dummy1
       - PRODUCER_TOPIC=dummy2
-      - PRODUCER_SERVER=${kafka_private_ip}:${kafka_port}
+      - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy2
 
   dummy3:
@@ -28,11 +28,11 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - CONSUMER_SERVER=${kafka_private_ip}:${kafka_port}
+      - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy3
       - CONSUMER_TOPICS=dummy2
       - PRODUCER_TOPIC=dummy3
-      - PRODUCER_SERVER=${kafka_private_ip}:${kafka_port}
+      - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy3
 
   dummy4:
@@ -40,11 +40,11 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - CONSUMER_SERVER=${kafka_private_ip}:${kafka_port}
+      - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy4
       - CONSUMER_TOPICS=dummy3
       - PRODUCER_TOPIC=dummy4
-      - PRODUCER_SERVER=${kafka_private_ip}:${kafka_port}
+      - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy4
 
   dummy5:
@@ -52,11 +52,11 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - CONSUMER_SERVER=${kafka_private_ip}:${kafka_port}
+      - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy5
       - CONSUMER_TOPICS=dummy4
       - PRODUCER_TOPIC=dummy5
-      - PRODUCER_SERVER=${kafka_private_ip}:${kafka_port}
+      - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy5
 
   dummy6:
@@ -64,11 +64,11 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - CONSUMER_SERVER=${kafka_private_ip}:${kafka_port}
+      - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy6
       - CONSUMER_TOPICS=dummy5
       - PRODUCER_TOPIC=dummy6
-      - PRODUCER_SERVER=${kafka_private_ip}:${kafka_port}
+      - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy6
 
   dummy7:
@@ -76,9 +76,9 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - CONSUMER_SERVER=${kafka_private_ip}:${kafka_port}
+      - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy7
       - CONSUMER_TOPICS=dummy6
       - PRODUCER_TOPIC=dummy7
-      - PRODUCER_SERVER=${kafka_private_ip}:${kafka_port}
+      - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy7
