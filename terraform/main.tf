@@ -74,6 +74,22 @@ resource "aws_security_group" "allow_ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "JMX port"
+    from_port   = 7075
+    to_port     = 7075
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Prometheus port"
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -87,7 +103,7 @@ resource "aws_security_group" "allow_ssh" {
 }
 
 resource "aws_instance" "zookeeper" {
-  ami                         = "ami-0941665311074d970"
+  ami                         = "ami-028d622bbd3676440"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -104,11 +120,13 @@ resource "aws_instance" "zookeeper" {
     user        = "ubuntu"
     private_key = file(var.private_key_path)
   }
+
+
 }
 
 resource "aws_instance" "kafka" {
   # count                       = 1
-  ami                         = "ami-0876854ad385cfee0"
+  ami                         = "ami-05a43fd0c873b0ccf"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -141,6 +159,42 @@ resource "aws_instance" "kafka" {
     inline = [
       "sudo mv -f /tmp/server.properties /etc/kafka/config/server.properties",
       "sudo systemctl restart kafka"
+    ]
+  }
+
+
+}
+
+resource "aws_instance" "prometheus" {
+  ami                         = "ami-08cff44e3a4b8f64e"
+  instance_type               = "t2.medium"
+  vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
+  subnet_id                   = aws_subnet.kafka.id
+  associate_public_ip_address = true
+  key_name                    = "alerce"
+
+  tags = {
+    Name = "kafka-experiment-prometheus"
+  }
+
+  connection {
+    type        = "ssh"
+    host        = self.public_ip
+    user        = "ubuntu"
+    private_key = file(var.private_key_path)
+  }
+  provisioner "file" {
+    content = templatefile("templates/prometheus.yml", {
+      kafka_ip = aws_instance.kafka.private_ip,
+      jmx_port = 7075
+    })
+    destination = "/tmp/prometheus.yml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv -f /tmp/prometheus.yml /etc/prometheus/prometheus.yml",
+      "sudo systemctl restart prometheus"
     ]
   }
 }

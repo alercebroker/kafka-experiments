@@ -51,15 +51,6 @@
     - "etc/kafka/data"
     - "/var/log/kafka"
 
-# - name: Copy config file
-#   template:
-#     src: "server.properties"
-#     dest: "/etc/kafka/config/server.properties"
-#     owner: kafka
-#     group: kafka
-#     mode: 0755
-
-
 - name: Copy systemd service script
   template:
     src: "kafka.service"

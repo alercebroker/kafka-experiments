@@ -4,7 +4,7 @@
         "aws_secret_key": "{{ env `AWS_SECRET_ACCESS_KEY` }}",
         "aws_region": "us-east-1",
         "instance_type": "{{ env `INSTANCE_TYPE` }}",
-        "name": "kafka-experiment-zookeeper"
+        "name": "kafka-experiment-prometheus"
     },
     "builders": [
         {
@@ -24,7 +24,7 @@
             "instance_type": "{{ user `instance_type` }}",
             "ssh_username": "ubuntu",
             "ami_name": "{{ user `name` }}-{{timestamp}}",
-            "ami_description": "Ubuntu 16.04 kafka-experiment Zookeeper Host Image",
+            "ami_description": "Ubuntu 16.04 kafka-experiment Prometheus Host Image",
             "launch_block_device_mappings": [
                 {
                     "device_name": "/dev/sda1",
@@ -48,8 +48,8 @@
         },
         {
             "type": "ansible-local",
-            "playbook_file": "../ansible/playbooks/zookeeper.yml",
-            "role_paths": [ "../ansible/roles/zookeeper"  ]
+            "playbook_file": "../ansible/playbooks/prometheus.yml",
+            "role_paths": [ "../ansible/roles/prometheus", "../ansible/roles/grafana" ]
         }
     ]
 }
