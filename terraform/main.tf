@@ -90,6 +90,14 @@ resource "aws_security_group" "allow_ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Grafana port"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -166,7 +174,7 @@ resource "aws_instance" "kafka" {
 }
 
 resource "aws_instance" "prometheus" {
-  ami                         = "ami-08cff44e3a4b8f64e"
+  ami                         = "ami-0cb466650cf552140"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
