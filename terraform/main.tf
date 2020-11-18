@@ -133,7 +133,7 @@ resource "aws_instance" "zookeeper" {
 }
 
 resource "aws_instance" "kafka" {
-  count                       = 1
+  count                       = 3
   ami                         = "ami-05a43fd0c873b0ccf"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
@@ -156,7 +156,7 @@ resource "aws_instance" "kafka" {
     content = templatefile("templates/server.properties", {
       zookeeper_host  = aws_instance.zookeeper.private_ip,
       zookeeper_port  = 2181,
-      broker_id       = count,
+      broker_id       = count.index + 1,
       kafka_public_ip = self.public_ip,
       kafka_port      = 9092
     })
@@ -174,7 +174,7 @@ resource "aws_instance" "kafka" {
 }
 
 resource "aws_instance" "prometheus" {
-  ami                         = "ami-0cb466650cf552140"
+  ami                         = "ami-0f79b65742d0a85b5"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -193,8 +193,10 @@ resource "aws_instance" "prometheus" {
   }
   provisioner "file" {
     content = templatefile("templates/prometheus.yml", {
-      kafka_ip = aws_instance.kafka.private_ip,
-      jmx_port = 7075
+      kafka1_ip = aws_instance.kafka[0].private_ip,
+      kafka2_ip = aws_instance.kafka[1].private_ip,
+      kafka3_ip = aws_instance.kafka[2].private_ip,
+      jmx_port  = 7075
     })
     destination = "/tmp/prometheus.yml"
   }
@@ -228,16 +230,20 @@ resource "aws_instance" "runner" {
 
   provisioner "file" {
     content = templatefile("templates/dummy_step_docker_compose.yml", {
-      kafka_private_ip = aws_instance.kafka.private_ip,
-      kafka_port       = 9092
+      kafka1_private_ip = aws_instance.kafka[0].private_ip,
+      kafka2_private_ip = aws_instance.kafka[1].private_ip,
+      kafka3_private_ip = aws_instance.kafka[2].private_ip,
+      kafka_port        = 9092
     })
     destination = "/tmp/dummy_step_docker_compose.yml"
   }
 
   provisioner "file" {
     content = templatefile("templates/simulator_docker_compose.yml", {
-      kafka_private_ip = aws_instance.kafka.private_ip,
-      kafka_port       = 9092
+      kafka1_private_ip = aws_instance.kafka[0].private_ip,
+      kafka2_private_ip = aws_instance.kafka[1].private_ip,
+      kafka3_private_ip = aws_instance.kafka[2].private_ip,
+      kafka_port        = 9092
     })
     destination = "/tmp/simulator_docker_compose.yml"
   }

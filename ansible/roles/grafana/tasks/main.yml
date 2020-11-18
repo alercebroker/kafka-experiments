@@ -1,22 +1,13 @@
 ---
 - name: Update apt cache and install dependencies
   apt:
-    name: "{{ item }}"
+    name: ["apt-transport-https", "software-properties-common" ]
     state: present
-    update_cache: yes
-  with_items:    
-    - apt-transport-https
-    - adduser
-    - ca-certificates
-    - libfontconfig
-    - gnupg2
-
 
 - name: Import Grafana GPG signing key
   apt_key:
     url: "https://packages.grafana.com/gpg.key"
     state: present
-
 
 - name: Add Grafana repository
   apt_repository:
@@ -29,7 +20,33 @@
     state: present
     update_cache: yes
 
+- name: Copy default datasource provision
+  template:
+    src: "default_datasource.yaml"
+    dest: "/etc/grafana/provisioning/datasources/default.yaml"
+    owner: root
+    group: root
 
+- name: Copy default dashboard provision
+  template:
+    src: "default_dashboard.yaml"
+    dest: "/etc/grafana/provisioning/dashboards/default.yaml"
+    owner: root
+    group: root
+
+- name: Create dashboards directory
+  file:
+    path: /var/lib/grafana/dashboards
+    state: directory
+    mode: '0755'
+
+- name: Copy default dashboard json
+  template:
+    src: "kafka_dashboard.json"
+    dest: "/var/lib/grafana/dashboards/kafka.json"
+    owner: root
+    group: root
+    
 - name: Start grafana server
   service:
     name: grafana-server
@@ -45,3 +62,4 @@
     name: grafana-server
     state: started
     enabled: yes
+
