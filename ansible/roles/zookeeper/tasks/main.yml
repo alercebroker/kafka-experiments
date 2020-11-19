@@ -1,9 +1,23 @@
 ---
-- name: Install Java SDK 8
-  apt:
-    update_cache: yes
-    name: openjdk-8-jdk-headless
-    state: present
+- name: Download Java OpenJDK 11
+  get_url:
+    url: "https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz"
+    dest: "/opt/java.tar.gz"
+
+- name: Extract jdk
+  unarchive:
+    src: /opt/java.tar.gz
+    dest: /opt
+    remote_src: yes
+
+- name: Move extracted folder to /usr/local
+  command: mv /opt/jdk-11.0.2 /usr/local/
+  args:
+    removes: "/opt/jdk-11.0.2"
+    creates: "/usr/local/jdk-11.0.2"
+
+- name: Set bashrc path variable
+  command: echo "export JAVA_HOME=/usr/local/jdk-11.0.2" >> /etc/bash.bashrc
 
 - name: Download Kafka
   get_url:
@@ -50,6 +64,7 @@
     - "etc/kafka"
     - "etc/kafka/data"
     - "/var/log/kafka"
+    - "/etc/kafka/logs"
 
 - name: Copy systemd service script
   template:

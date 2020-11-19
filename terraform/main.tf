@@ -111,7 +111,7 @@ resource "aws_security_group" "allow_ssh" {
 }
 
 resource "aws_instance" "zookeeper" {
-  ami                         = "ami-028d622bbd3676440"
+  ami                         = "ami-04ee925d0a11f6a7b"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -134,7 +134,7 @@ resource "aws_instance" "zookeeper" {
 
 resource "aws_instance" "kafka" {
   count                       = 3
-  ami                         = "ami-05a43fd0c873b0ccf"
+  ami                         = "ami-0faac9cd8a541afae"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -174,7 +174,7 @@ resource "aws_instance" "kafka" {
 }
 
 resource "aws_instance" "prometheus" {
-  ami                         = "ami-0f79b65742d0a85b5"
+  ami                         = "ami-0f7337427e248d613"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id

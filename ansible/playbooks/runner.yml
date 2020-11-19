@@ -4,3 +4,4 @@
   roles:
     - docker
     - run_experiments
+    - node_exporter

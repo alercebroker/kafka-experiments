@@ -4,3 +4,4 @@
   roles:
     - prometheus
     - grafana
+    - node_exporter

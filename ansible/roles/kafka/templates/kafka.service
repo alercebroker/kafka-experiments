@@ -4,7 +4,8 @@ After=network.target
 [Service]
 User=kafka
 Environment="KAFKA_OPTS=-javaagent:/etc/kafka/libs/jmx_exporter.jar=7075:/etc/kafka/config/sample_jmx_exporter.yml"
-Environment="KAFKA_HEAP_OPTS="-Xmx2G -Xms2G"
+Environment="KAFKA_HEAP_OPTS=-Xmx2500m -Xms2500m"
+Environment="JAVA_HOME=/usr/local/jdk-11.0.2"
 ExecStart=/etc/kafka/bin/kafka-server-start.sh /etc/kafka/config/server.properties
 [Install]
 WantedBy=multi-user.target
