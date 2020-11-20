@@ -1,6 +1,8 @@
 - name: Install Kafka
   hosts: all
   become: yes
+  vars:
+    username: kafka
   roles:
     - kafka
     - jmx_exporter

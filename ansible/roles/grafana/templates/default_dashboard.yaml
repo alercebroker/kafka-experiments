@@ -6,5 +6,9 @@ providers:
     type: file
     options:
       path:  /var/lib/grafana/dashboards
-            # Default path for Windows: C:/Program Files/GrafanaLabs/grafana/public/dashboards
-            # Default path for Linux is: /var/lib/grafana/dashboards
+
+  - name: "Node Exporter"
+    folder: NodeExporter
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

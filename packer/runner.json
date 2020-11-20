@@ -49,7 +49,7 @@
         {
             "type": "ansible-local",
             "playbook_file": "../ansible/playbooks/runner.yml",
-            "role_paths": ["../ansible/roles/docker", "../ansible/roles/run_experiments"]
+            "role_paths": ["../ansible/roles/docker", "../ansible/roles/run_experiments", "../ansible/roles/node_exporter"]
         }
     ]
 }

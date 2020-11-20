@@ -28,3 +28,7 @@ scrape_configs:
 
     static_configs:
     - targets: ['${kafka1_ip}:${jmx_port}', '${kafka2_ip}:${jmx_port}', '${kafka3_ip}:${jmx_port}']
+
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: [%{for ip in pipeline_ip ~}'${ip}:9100',%{ endfor ~} 'localhost:9100', '${kafka1_ip}:9100', '${kafka2_ip}:9100', '${kafka3_ip}:9100', '${zookeeper_ip}:9100', '${simulator_ip}:9100']

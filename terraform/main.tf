@@ -2,6 +2,16 @@ variable "private_key_path" {
   description = "Path to AWS .pem Keyring"
 }
 
+variable "pipeline_scale" {
+  description = "Number of instances with the full pipeline"
+  default     = 1
+}
+
+variable "simulator_scale" {
+  description = "Number of simulator containers to run"
+  default     = 1
+}
+
 # Configure the AWS Provider
 provider "aws" {
   region = "us-east-1"
@@ -98,6 +108,14 @@ resource "aws_security_group" "allow_ssh" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "NodeExporter port"
+    from_port   = 9100
+    to_port     = 9100
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -111,8 +129,8 @@ resource "aws_security_group" "allow_ssh" {
 }
 
 resource "aws_instance" "zookeeper" {
-  ami                         = "ami-04ee925d0a11f6a7b"
-  instance_type               = "t2.medium"
+  ami                         = "ami-0698fe54008f8e70e"
+  instance_type               = "t2.small"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true
@@ -134,15 +152,15 @@ resource "aws_instance" "zookeeper" {
 
 resource "aws_instance" "kafka" {
   count                       = 3
-  ami                         = "ami-0faac9cd8a541afae"
-  instance_type               = "t2.medium"
+  ami                         = "ami-03b76203cdb08c4ef"
+  instance_type               = "t2.xlarge"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true
   key_name                    = "alerce"
 
   tags = {
-    Name = "kafka-experiment-kafka"
+    Name = "kafka-experiment-kafka-${count.index}"
   }
 
   connection {
@@ -174,8 +192,8 @@ resource "aws_instance" "kafka" {
 }
 
 resource "aws_instance" "prometheus" {
-  ami                         = "ami-0f7337427e248d613"
-  instance_type               = "t2.medium"
+  ami                         = "ami-0ac9b89c4afaff9f7"
+  instance_type               = "t2.small"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true
@@ -193,10 +211,13 @@ resource "aws_instance" "prometheus" {
   }
   provisioner "file" {
     content = templatefile("templates/prometheus.yml", {
-      kafka1_ip = aws_instance.kafka[0].private_ip,
-      kafka2_ip = aws_instance.kafka[1].private_ip,
-      kafka3_ip = aws_instance.kafka[2].private_ip,
-      jmx_port  = 7075
+      kafka1_ip    = aws_instance.kafka[0].private_ip,
+      kafka2_ip    = aws_instance.kafka[1].private_ip,
+      kafka3_ip    = aws_instance.kafka[2].private_ip,
+      zookeeper_ip = aws_instance.zookeeper.private_ip,
+      simulator_ip = aws_instance.simulator.private_ip,
+      pipeline_ip  = aws_instance.pipeline.*.private_ip,
+      jmx_port     = 7075
     })
     destination = "/tmp/prometheus.yml"
   }
@@ -209,8 +230,47 @@ resource "aws_instance" "prometheus" {
   }
 }
 
-resource "aws_instance" "runner" {
-  ami                         = "ami-02315c8e28c3f782d"
+resource "aws_instance" "simulator" {
+  ami                         = "ami-0a46ac9025b7762cc"
+  instance_type               = "t2.2xlarge"
+  vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
+  subnet_id                   = aws_subnet.kafka.id
+  associate_public_ip_address = true
+  key_name                    = "alerce"
+
+  tags = {
+    Name = "kafka-experiment-simulator"
+  }
+
+  connection {
+    type        = "ssh"
+    host        = self.public_ip
+    user        = "ubuntu"
+    private_key = file(var.private_key_path)
+  }
+
+  provisioner "file" {
+    content = templatefile("templates/simulator_docker_compose.yml", {
+      kafka1_private_ip = aws_instance.kafka[0].private_ip,
+      kafka2_private_ip = aws_instance.kafka[1].private_ip,
+      kafka3_private_ip = aws_instance.kafka[2].private_ip,
+      kafka_port        = 9092
+    })
+    destination = "/tmp/simulator_docker_compose.yml"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mv -f /tmp/simulator_docker_compose.yml /home/ubuntu/experiment/vera_rubin_simulator/docker-compose.yml",
+      "cd /home/ubuntu/experiment/vera_rubin_simulator",
+      "sudo docker-compose up -d --scale simulator_producer=${var.simulator_scale}",
+    ]
+  }
+}
+
+resource "aws_instance" "pipeline" {
+  count                       = var.pipeline_scale
+  ami                         = "ami-0a46ac9025b7762cc"
   instance_type               = "t2.medium"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -218,7 +278,7 @@ resource "aws_instance" "runner" {
   key_name                    = "alerce"
 
   tags = {
-    Name = "kafka-experiment-runner"
+    Name = "kafka-experiment-pipeline-${count.index}"
   }
 
   connection {
@@ -237,25 +297,11 @@ resource "aws_instance" "runner" {
     })
     destination = "/tmp/dummy_step_docker_compose.yml"
   }
-
-  provisioner "file" {
-    content = templatefile("templates/simulator_docker_compose.yml", {
-      kafka1_private_ip = aws_instance.kafka[0].private_ip,
-      kafka2_private_ip = aws_instance.kafka[1].private_ip,
-      kafka3_private_ip = aws_instance.kafka[2].private_ip,
-      kafka_port        = 9092
-    })
-    destination = "/tmp/simulator_docker_compose.yml"
-  }
-
   provisioner "remote-exec" {
     inline = [
-      "sudo mv -f /tmp/simulator_docker_compose.yml /home/ubuntu/experiment/vera_rubin_simulator/docker-compose.yml",
       "sudo mv -f /tmp/dummy_step_docker_compose.yml /home/ubuntu/experiment/dummy_step/docker-compose.yml",
-      "cd /home/ubuntu/experiment/vera_rubin_simulator",
-      "sudo docker-compose up -d simulator_producer",
       "cd /home/ubuntu/experiment/dummy_step",
-      "sudo docker-compose up -d dummy1"
+      "sudo docker-compose up -d",
     ]
   }
 }

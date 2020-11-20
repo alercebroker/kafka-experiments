@@ -40,12 +40,17 @@
     state: directory
     mode: '0755'
 
-- name: Copy default dashboard json
+- name: Copy default kafka dashboard json
   template:
     src: "kafka_dashboard.json"
     dest: "/var/lib/grafana/dashboards/kafka.json"
     owner: root
     group: root
+
+- name: Copy default node_exporter dashboard json
+  template:
+    src: "node_exporter_dashboard.json"
+    dest: "/var/lib/grafana/dashboards/node_exporter.json"
     
 - name: Start grafana server
   service:

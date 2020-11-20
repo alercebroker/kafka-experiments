@@ -7,8 +7,11 @@
 - name: Extract node exporter
   unarchive:
     src: /tmp/node_exporter.tar.gz
-    dest: /opt/node_exporter
+    dest: /tmp
     remote_src: yes
+
+- name: Move extracted folder
+  command: mv /tmp/node_exporter-1.0.1.linux-amd64 /opt/node_exporter
 
 - name: Copy service file
   template:

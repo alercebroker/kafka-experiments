@@ -1,6 +1,8 @@
 - name: Install Zookeeper
   hosts: all
   become: yes
+  vars:
+    username: zookeeper
   roles:
     - zookeeper
     - node_exporter

@@ -1,6 +1,8 @@
 - name: Install Prometheus
   hosts: all
   become: yes
+  vars:
+    username: prometheus
   roles:
     - prometheus
     - grafana

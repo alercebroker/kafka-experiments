@@ -1,6 +1,8 @@
 - name: Run experiment
   hosts: all
   become: yes
+  vars:
+    username: ubuntu
   roles:
     - docker
     - run_experiments
