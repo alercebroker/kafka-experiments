@@ -152,7 +152,7 @@ resource "aws_instance" "zookeeper" {
 
 resource "aws_instance" "kafka" {
   count                       = 3
-  ami                         = "ami-03b76203cdb08c4ef"
+  ami                         = "ami-073f7717c8952cb06"
   instance_type               = "t2.xlarge"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -179,6 +179,26 @@ resource "aws_instance" "kafka" {
       kafka_port      = 9092
     })
     destination = "/tmp/server.properties"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir /mnt/data1",
+      "sudo mkdir /mnt/data2",
+      "sudo mkdir /mnt/data3",
+      "sudo mkfs.ext4 /dev/xvdb",
+      "sudo mount /dev/xvdb /mnt/data1",
+      "sudo mkfs.ext4 /dev/xvdc",
+      "sudo mount /dev/xvdc /mnt/data2",
+      "sudo mkfs.ext4 /dev/xvdd",
+      "sudo mount /dev/xvdd /mnt/data3",
+      "sudo mkdir /mnt/data1/kafka",
+      "sudo mkdir /mnt/data2/kafka",
+      "sudo mkdir /mnt/data3/kafka",
+      "sudo chown kafka:kafka /mnt/data1/kafka",
+      "sudo chown kafka:kafka /mnt/data2/kafka",
+      "sudo chown kafka:kafka /mnt/data3/kafka"
+    ]
   }
 
   provisioner "remote-exec" {
@@ -231,7 +251,7 @@ resource "aws_instance" "prometheus" {
 }
 
 resource "aws_instance" "simulator" {
-  ami                         = "ami-0a46ac9025b7762cc"
+  ami                         = "ami-0db4193204e4c2a59"
   instance_type               = "t2.2xlarge"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
@@ -270,8 +290,8 @@ resource "aws_instance" "simulator" {
 
 resource "aws_instance" "pipeline" {
   count                       = var.pipeline_scale
-  ami                         = "ami-0a46ac9025b7762cc"
-  instance_type               = "t2.medium"
+  ami                         = "ami-0db4193204e4c2a59"
+  instance_type               = "t2.2xlarge"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true

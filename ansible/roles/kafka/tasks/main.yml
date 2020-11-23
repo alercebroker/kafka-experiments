@@ -63,7 +63,6 @@
   with_items:
     - "etc/kafka"
     - "etc/kafka/data"
-    - "/var/log/kafka"
     - "/etc/kafka/logs"
 
 - name: Copy systemd service script
