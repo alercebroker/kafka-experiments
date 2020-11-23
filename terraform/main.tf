@@ -29,6 +29,7 @@ resource "aws_subnet" "kafka" {
   vpc_id                  = aws_vpc.kafka.id
   cidr_block              = "108.0.0.0/24"
   map_public_ip_on_launch = true
+  availability_zone       = "us-east-1a"
   tags = {
     Name = "kafka-subnet"
   }
@@ -131,6 +132,7 @@ resource "aws_security_group" "allow_ssh" {
 resource "aws_instance" "zookeeper" {
   ami                         = "ami-0698fe54008f8e70e"
   instance_type               = "t2.small"
+  availability_zone           = "us-east-1a"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true
@@ -153,7 +155,8 @@ resource "aws_instance" "zookeeper" {
 resource "aws_instance" "kafka" {
   count                       = 3
   ami                         = "ami-073f7717c8952cb06"
-  instance_type               = "t2.xlarge"
+  instance_type               = "t2.2xlarge"
+  availability_zone           = "us-east-1a"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true
@@ -214,6 +217,7 @@ resource "aws_instance" "kafka" {
 resource "aws_instance" "prometheus" {
   ami                         = "ami-0ac9b89c4afaff9f7"
   instance_type               = "t2.small"
+  availability_zone           = "us-east-1a"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true
@@ -252,7 +256,8 @@ resource "aws_instance" "prometheus" {
 
 resource "aws_instance" "simulator" {
   ami                         = "ami-0db4193204e4c2a59"
-  instance_type               = "t2.2xlarge"
+  instance_type               = "c5a.4xlarge"
+  availability_zone           = "us-east-1a"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true
@@ -291,7 +296,8 @@ resource "aws_instance" "simulator" {
 resource "aws_instance" "pipeline" {
   count                       = var.pipeline_scale
   ami                         = "ami-0db4193204e4c2a59"
-  instance_type               = "t2.2xlarge"
+  instance_type               = "c5a.4xlarge"
+  availability_zone           = "us-east-1a"
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
   subnet_id                   = aws_subnet.kafka.id
   associate_public_ip_address = true
