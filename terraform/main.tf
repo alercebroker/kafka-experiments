@@ -240,8 +240,8 @@ resource "aws_instance" "prometheus" {
       kafka3_ip    = aws_instance.kafka[2].private_ip,
       zookeeper_ip = aws_instance.zookeeper.private_ip,
       simulator_ip = aws_instance.simulator.private_ip,
-      pipeline_ip  = aws_instance.pipeline.*.private_ip,
-      jmx_port     = 7075
+      # pipeline_ip  = aws_instance.pipeline.*.private_ip,
+      jmx_port = 7075
     })
     destination = "/tmp/prometheus.yml"
   }
@@ -293,41 +293,41 @@ resource "aws_instance" "simulator" {
   }
 }
 
-resource "aws_instance" "pipeline" {
-  count                       = var.pipeline_scale
-  ami                         = "ami-0db4193204e4c2a59"
-  instance_type               = "c5a.4xlarge"
-  availability_zone           = "us-east-1a"
-  vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
-  subnet_id                   = aws_subnet.kafka.id
-  associate_public_ip_address = true
-  key_name                    = "alerce"
+# resource "aws_instance" "pipeline" {
+#   count                       = var.pipeline_scale
+#   ami                         = "ami-0db4193204e4c2a59"
+#   instance_type               = "c5a.4xlarge"
+#   availability_zone           = "us-east-1a"
+#   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
+#   subnet_id                   = aws_subnet.kafka.id
+#   associate_public_ip_address = true
+#   key_name                    = "alerce"
 
-  tags = {
-    Name = "kafka-experiment-pipeline-${count.index}"
-  }
+#   tags = {
+#     Name = "kafka-experiment-pipeline-${count.index}"
+#   }
 
-  connection {
-    type        = "ssh"
-    host        = self.public_ip
-    user        = "ubuntu"
-    private_key = file(var.private_key_path)
-  }
+#   connection {
+#     type        = "ssh"
+#     host        = self.public_ip
+#     user        = "ubuntu"
+#     private_key = file(var.private_key_path)
+#   }
 
-  provisioner "file" {
-    content = templatefile("templates/dummy_step_docker_compose.yml", {
-      kafka1_private_ip = aws_instance.kafka[0].private_ip,
-      kafka2_private_ip = aws_instance.kafka[1].private_ip,
-      kafka3_private_ip = aws_instance.kafka[2].private_ip,
-      kafka_port        = 9092
-    })
-    destination = "/tmp/dummy_step_docker_compose.yml"
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "sudo mv -f /tmp/dummy_step_docker_compose.yml /home/ubuntu/experiment/dummy_step/docker-compose.yml",
-      "cd /home/ubuntu/experiment/dummy_step",
-      "sudo docker-compose up -d",
-    ]
-  }
-}
+#   provisioner "file" {
+#     content = templatefile("templates/dummy_step_docker_compose.yml", {
+#       kafka1_private_ip = aws_instance.kafka[0].private_ip,
+#       kafka2_private_ip = aws_instance.kafka[1].private_ip,
+#       kafka3_private_ip = aws_instance.kafka[2].private_ip,
+#       kafka_port        = 9092
+#     })
+#     destination = "/tmp/dummy_step_docker_compose.yml"
+#   }
+#   provisioner "remote-exec" {
+#     inline = [
+#       "sudo mv -f /tmp/dummy_step_docker_compose.yml /home/ubuntu/experiment/dummy_step/docker-compose.yml",
+#       "cd /home/ubuntu/experiment/dummy_step",
+#       "sudo docker-compose up -d",
+#     ]
+#   }
+# }
