@@ -1,47 +1,40 @@
 #+TITLE: Kafka Experiments
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
-* First with 3 disks
-<2020-11-22 dom 12:08>
+* Producer Scale Experiment
+<2020-11-24 mar>
+- Experiment consisted in running producers in parallel and measure the production rate at its stationary state.
+- Producers used the LSST simulator alerts with a limit of 5MB alert size.
+- Each run with n producers was repeated 3 times.
 ** Kafka setup
 *** Hardware
-| Instance type | # Brokers | # Cores | RAM (GB) | # Disks | Disk storage |
-|---------------+-----------+---------+----------+---------+--------------|
-| t2.xlarge     |         3 |       4 |       16 |       3 |          100 |
+| Producers | Instance type | # Brokers | # Cores | RAM (GB) | # Disks | Disk storage |
+|-----------+---------------+-----------+---------+----------+---------+--------------|
+|         2 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
+|         4 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
+|         8 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
+|        16 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
+|        32 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
 
 *** Software
-| JVM RAM | Replication factor | # Partitions | server.properties |
-|---------+--------------------+--------------+-------------------|
-|       5 |                  2 |            8 | [[file:server.properties.1][server.properties]] |
-
-** Pipeline setup
-| Instance type | # Scale | # Cores | RAM (GB) |
-|---------------+---------+---------+----------|
-| t2.2xlarge    |       4 |       8 |       31 |
+Server properties was almost the same for each experiment, only changing the number of partitions to equal the number of producers. [[file:server.properties.producer2][server.properties]]
+| Producers | JVM RAM | Replication factor | # Partitions |
+|-----------+---------+--------------------+--------------|
+|         2 |       5 |                  1 |            2 |
+|         4 |       5 |                  1 |            4 |
+|         8 |       5 |                  1 |            8 |
+|        16 |       5 |                  1 |           16 |
+|        32 |       5 |                  1 |           32 |
 
 ** Results
-| Topic     | Messages/s | MB/s |
-|-----------+------------+------|
-| simulator |        522 |   48 |
-| dummy1    |        250 |   20 |
-| dummy2    |        200 |   20 |
-| dummy3    |        200 |   20 |
-| dummy4    |        200 |   20 |
-| dummy5    |        200 |   20 |
-| dummy6    |        200 |   20 |
-| dummy7    |        200 |   20 |
-| dummy8    |        200 |   20 |
+The following table shows the aproximate results when the rate reached a stationary state.
+| Producers | Messages/s |  MB/s |
+|-----------+------------+-------|
+|         2 |        294 |  25.6 |
+|         4 |        592 |  51.8 |
+|         8 |       1152 | 100.7 |
+|        16 |       2228 | 195.7 |
+|        32 |       3200 | 279.8 |
 
+The following plot shows the mean values for the producer rate at stationary state including all 3 runs of the same configuration.
 #+attr_html: :alt  :align left :class img
-[[file:kafka1.png][file:kafka1.png]]
-
-
-| Instance  | RAM Used | RAM Cache+Buffer |  CPU | Network | Disk IOps   | Disk R/W MB/s |
-|-----------+----------+------------------+------+---------+-------------+---------------|
-| kafka0    | 5GB      | 10GB             | <50% | 900Mb/s | 200         | 40            |
-| kafka1    | 5GB      | 10GB             | <50% | 750Mb/s | 200         | 30            |
-| kafka2    | 5GB      | 10GB             | <60% | 800MB/s | 250         | 40            |
-| simulator | 1GB      | 2.5GB            |  50% | 500Mb/s | 750 then 0  | 25 then 0     |
-| pipeline1 | 1.2GB    | 2.8GB            | <60% | 500Mb/s | 500 then 0  | 15 then 0     |
-| pipeline2 | 1.4GB    | 2.8GB            | <60% | 500Mb/s | 1500 then 0 | 30 then 0     |
-| pipeline3 | 1.3GB    | 2.8GB            | <60% | 500Mb/s | 400 then 0  | 20 then 0     |
-| pipeline0 | 1.2GB    | 2.8GB            | <60% | 500Mb/s | 600 then 0  | 20 then 0     |
+[[file:producer_exp.png][Experiment results]]
