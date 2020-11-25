@@ -37,4 +37,4 @@ The following table shows the aproximate results when the rate reached a station
 
 The following plot shows the mean values for the producer rate at stationary state including all 3 runs of the same configuration.
 #+attr_html: :alt  :align left :class img
-[[file:producer_exp.png][Experiment results]]
+[[file:producer_exp.png][file:producer_exp.png]]
