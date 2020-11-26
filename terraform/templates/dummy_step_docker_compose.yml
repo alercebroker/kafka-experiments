@@ -18,7 +18,7 @@ services:
     environment:
       - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy2
-      - CONSUMER_TOPICS=dummy1
+      - CONSUMER_TOPICS=vera-rubin-simulator
       - PRODUCER_TOPIC=dummy2
       - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy2
@@ -30,7 +30,7 @@ services:
     environment:
       - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy3
-      - CONSUMER_TOPICS=dummy2
+      - CONSUMER_TOPICS=vera-rubin-simulator
       - PRODUCER_TOPIC=dummy3
       - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy3
@@ -42,7 +42,7 @@ services:
     environment:
       - CONSUMER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - CONSUMER_GROUP_ID=dummy4
-      - CONSUMER_TOPICS=dummy3
+      - CONSUMER_TOPICS=dummy1
       - PRODUCER_TOPIC=dummy4
       - PRODUCER_SERVER=${kafka1_private_ip}:${kafka_port},${kafka2_private_ip}:${kafka_port},${kafka3_private_ip}:${kafka_port}
       - STEP_NAME=dummy4
