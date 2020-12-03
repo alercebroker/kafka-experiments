@@ -9,11 +9,11 @@
 *** Hardware
 | Producers | Instance type | # Brokers | # Cores | RAM (GB) | # Disks | Disk storage |
 |-----------+---------------+-----------+---------+----------+---------+--------------|
-|         2 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
-|         4 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
-|         8 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
-|        16 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
-|        32 | c5a.4xlarge   |         3 |      16 |       32 |       3 |          100 |
+|         2 | t2.2xlarge    |         3 |       8 |       32 |       3 |          100 |
+|         4 | t2.2xlarge    |         3 |       8 |       32 |       3 |          100 |
+|         8 | t2.2xlarge    |         3 |       8 |       32 |       3 |          100 |
+|        16 | t2.2xlarge    |         3 |       8 |       32 |       3 |          100 |
+|        32 | t2.2xlarge    |         3 |       8 |       32 |       3 |          100 |
 
 *** Software
 Server properties was almost the same for each experiment, only changing the number of partitions to equal the number of producers. [[file:server.properties.producer2][server.properties]]
@@ -38,3 +38,119 @@ The following table shows the aproximate results when the rate reached a station
 The following plot shows the mean values for the producer rate at stationary state including all 3 runs of the same configuration.
 #+attr_html: :alt  :align left :class img
 [[file:producer_exp.png][file:producer_exp.png]]
+* Producer Scale Experiment N°2
+<2020-11-26 jue>
+** Experiment Description
+- Experiment consisted in running producers in parallel and measure the production rate at its stationary state.
+- Producers used the LSST simulator alerts with a limit of 5MB alert size.
+- Each run with n producers was repeated 3 times.
+
+** Problems and solutions
+No problems in this experiment.
+** Hardware
+*** Kafka
+| Producers | Instance type | # Brokers | # Cores | RAM (GB) | # Disks | Disk storage |
+|-----------+---------------+-----------+---------+----------+---------+--------------|
+|         2 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+|         4 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+|         8 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+|        16 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+|        32 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+*** Zookeeper
+| Producers | Instance type | # Brokers | # Cores | RAM (GB) | Disk storage |
+|-----------+---------------+-----------+---------+----------+--------------|
+|         2 | m5a.large     |         1 |       2 |        8 |           10 |
+|         4 | m5a.large     |         1 |       2 |        8 |           10 |
+|         8 | m5a.large     |         1 |       2 |        8 |           10 |
+|        16 | m5a.large     |         1 |       2 |        8 |           10 |
+|        32 | m5a.large     |         1 |       2 |        8 |           10 |
+*** Simulator
+| Producers | Instance type | # Instances | # Cores | RAM (GB) | Disk storage |
+|-----------+---------------+-------------+---------+----------+--------------|
+|         2 | c5a.4xlarge   |           1 |      16 |       32 |           10 |
+|         4 | c5a.4xlarge   |           1 |      16 |       32 |           10 |
+|         8 | c5a.4xlarge   |           1 |      16 |       32 |           10 |
+|        16 | c5a.4xlarge   |           2 |      16 |       32 |           10 |
+|        32 | c5a.4xlarge   |           4 |      16 |       32 |           10 |
+
+** Software
+*** Kafka config
+Most of the settings were default kafka.serverproperties. The only changed values are the following:
+- ~num.partitions = [2,4,8,16,32]~ for performance
+- ~num.network.threads=64~ for performance
+- ~num.io.threads=64~ for performance
+- ~log.retention.bytes=6710886400~ for avoiding running out of space during the experiment
+*** Producers config
+The only additional configuration for the producer is:
+- ~message.max.bytes = 8388608~ 
+** Results
+# *** Hardware Metrics
+*** Kafka Metrics
+#+attr_html: :alt  :align left :class img
+[[file:producer_exp2.png][file:producer_exp2.png]]
+
+** Summary
+- Increasing number of partitions increases performance linearly
+- Disc IO rate also plays an important role at higher rates
+- Number of brokers didn't need to change in this experiment
+- When comparing this experiment that uses m5a instance type on the Kafka servers, we didn't reach a ceiling in performance, even at 32 partitions. In fact the higher rates at 32 partitions were higher. The lower rates (<=8 partitions) remained the same though.
+- We could get the expected rate of around 100MB/s with cheaper instance types.
+
+* Dummy Steps Experiment
+<2020-11-26 jue>
+** Experiment Description
+- Experiment consisted in running producers in parallel with LSST type alerts to a topic that acts as the LSST stream and consuming from this topic with multiple dummy steps simulating the ALeRCE Pipeline.
+- We run 8 dummy steps. One for each pipeline step, and the topics connecting these steps were set in a way that also mimics the real pipeline. See the figure below that shows the simulated pipeline.
+- In this experiment we compare the throughput in al the steps with different number of producers, consumers and partitions, showing how te rate scales when doubling the partitions for each topic.
+** Problems and solutions
+- When increasing the number of partitions up to 8 the rate of the dummy steps topics started to fall down. 
+- The logs of the dummy processes showed timeouts with the group coordinator.
+- When using 4 partitions the consumers worked fine, but increasing to 8 caused the timeouts.
+
+The problem was that the APF commit is asynchronous, so at higher consumption rates these commits started to accumulate and
+Kafka wasn't handling commits faster than they were sent, so older commits triggered a timeout and that caused the consumer group
+to rebalance.
+
+The solution was to make commits synchronous and then the consumer rate was as high and steady as the production rates.
+
+** Hardware
+*** Kafka
+| Producers | Instance type | # Brokers | # Cores | RAM (GB) | # Disks | Disk storage |
+|-----------+---------------+-----------+---------+----------+---------+--------------|
+|         2 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+|         4 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+|         8 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+|        16 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+|        32 | m5a.2xlarge   |         3 |       8 |       32 |       3 |          100 |
+*** Zookeeper
+| Producers | Instance type | # Brokers | # Cores | RAM (GB) | Disk storage |
+|-----------+---------------+-----------+---------+----------+--------------|
+|         2 | m5a.large     |         1 |       2 |        8 |           10 |
+|         4 | m5a.large     |         1 |       2 |        8 |           10 |
+|         8 | m5a.large     |         1 |       2 |        8 |           10 |
+|        16 | m5a.large     |         1 |       2 |        8 |           10 |
+|        32 | m5a.large     |         1 |       2 |        8 |           10 |
+*** Simulator
+| Producers | Instance type | # Instances | # Cores | RAM (GB) | Disk storage |
+|-----------+---------------+-------------+---------+----------+--------------|
+|         2 | c5a.4xlarge   |           1 |      16 |       32 |           10 |
+|         4 | c5a.4xlarge   |           1 |      16 |       32 |           10 |
+|         8 | c5a.4xlarge   |           1 |      16 |       32 |           10 |
+|        16 | c5a.4xlarge   |           2 |      16 |       32 |           10 |
+|        32 | c5a.4xlarge   |           4 |      16 |       32 |           10 |
+*** Pipeline
+| Producers | Instance type | # Instances | # Cores | RAM (GB) | Disk storage |
+|-----------+---------------+-------------+---------+----------+--------------|
+|         2 | c5a.4xlarge   |           2 |      16 |       32 |           10 |
+|         4 | c5a.4xlarge   |           4 |      16 |       32 |           10 |
+|         8 | c5a.4xlarge   |           8 |      16 |       32 |           10 |
+|        16 | c5a.4xlarge   |          16 |      16 |       32 |           10 |
+|        32 | c5a.4xlarge   |          32 |      16 |       32 |           10 |
+** Software
+*** Kafka config
+*** Producers config
+*** Dummy steps config
+** Results
+*** Hardware Metrics
+*** Kafka Metrics
+* Dummy Steps with Minimum Kafka Hardware
